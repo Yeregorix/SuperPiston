@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.7.4",
+  "package": "net.smoofyuniverse.superpiston.mixin",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "mixins.superpiston.refmap.json",
+  "server": [
+    "MixinBlockPistonBase",
+    "MixinBlockPistonStructureHelper"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
