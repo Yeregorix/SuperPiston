@@ -33,6 +33,7 @@ import org.spongepowered.common.util.VecHelper;
 public class BlockUtil {
 	private static final boolean useForge = detectForge();
 
+	@SuppressWarnings("deprecation")
 	public static boolean hasTileEntity(BlockState state) {
 		IBlockState nmsState = (IBlockState) state;
 		return useForge ? nmsState.getBlock().hasTileEntity(nmsState) : nmsState.getBlock().hasTileEntity();
