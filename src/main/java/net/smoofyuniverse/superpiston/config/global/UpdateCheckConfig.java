@@ -20,41 +20,32 @@
  * SOFTWARE.
  */
 
-package net.smoofyuniverse.superpiston.config;
+package net.smoofyuniverse.superpiston.config.global;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
-import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureCalculator.MovementReaction;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.block.BlockState;
-
-import java.util.Map;
 
 @ConfigSerializable
-public class PistonConfig {
-	public static final TypeToken<PistonConfig> TOKEN = TypeToken.of(PistonConfig.class);
-
-	@Setting(value = "BlockReactions")
-	public Map<BlockState, MovementReaction> blockReactions;
-	@Setting(value = "StickyBlocks")
-	public Map<BlockState, Boolean> stickyBlocks;
-	@Setting(value = "MaxBlocks")
-	public int maxBlocks = 12;
+public class UpdateCheckConfig {
+	@Setting(value = "Enabled", comment = "Enable or disable automatic update checking")
+	public boolean enabled = true;
+	@Setting(value = "ConsoleDelay", comment = "Delay in ticks before sending a message to the console, between -1 and 100")
+	public int consoleDelay = 20;
+	@Setting(value = "PlayerDelay", comment = "Delay in ticks before sending a message after a player connection, between -1 and 100")
+	public int playerDelay = 20;
 
 	public Immutable toImmutable() {
-		return new Immutable(this.blockReactions, this.stickyBlocks, this.maxBlocks);
+		return new Immutable(this.enabled, this.consoleDelay, this.playerDelay);
 	}
 
 	public static class Immutable {
-		public final Map<BlockState, MovementReaction> blockReactions;
-		public final Map<BlockState, Boolean> stickyBlocks;
-		public final int maxBlocks;
+		public final boolean enabled;
+		public final int consoleDelay, playerDelay;
 
-		public Immutable(Map<BlockState, MovementReaction> blockReactions, Map<BlockState, Boolean> stickyBlocks, int maxBlocks) {
-			this.blockReactions = ImmutableMap.copyOf(blockReactions);
-			this.stickyBlocks = ImmutableMap.copyOf(stickyBlocks);
-			this.maxBlocks = maxBlocks;
+		public Immutable(boolean enabled, int consoleDelay, int playerDelay) {
+			this.enabled = enabled;
+			this.consoleDelay = consoleDelay;
+			this.playerDelay = playerDelay;
 		}
 	}
 }

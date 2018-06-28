@@ -24,16 +24,16 @@ package net.smoofyuniverse.superpiston.impl.calculator;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureCalculator;
-import net.smoofyuniverse.superpiston.config.PistonConfig;
+import net.smoofyuniverse.superpiston.config.world.WorldConfig;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.World;
 
 public class SuperPistonStructureCalculator extends DefaultStructureCalculator {
-	public final PistonConfig.Immutable config;
+	public final WorldConfig.Immutable config;
 
-	public SuperPistonStructureCalculator(World world, BlockSnapshot piston, Direction direction, Direction movement, PistonConfig.Immutable config) {
+	public SuperPistonStructureCalculator(World world, BlockSnapshot piston, Direction direction, Direction movement, WorldConfig.Immutable config) {
 		super(world, piston, direction, movement);
 		if (config == null)
 			throw new IllegalArgumentException("config");
