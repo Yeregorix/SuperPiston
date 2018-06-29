@@ -33,6 +33,7 @@ import java.util.Map;
 
 @ConfigSerializable
 public class WorldConfig {
+	public static final int CURRENT_VERSION = 1, MINIMUM__VERSION = 1;
 	public static final TypeToken<WorldConfig> TOKEN = TypeToken.of(WorldConfig.class);
 
 	@Setting(value = "BlockReactions")

@@ -30,6 +30,7 @@ import net.smoofyuniverse.superpiston.config.world.WorldConfig.Immutable;
 import net.smoofyuniverse.superpiston.event.PlayerEventListener;
 import net.smoofyuniverse.superpiston.event.WorldEventListener;
 import net.smoofyuniverse.superpiston.ore.OreAPI;
+import net.smoofyuniverse.superpiston.util.IOUtil;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -67,10 +68,9 @@ import static net.smoofyuniverse.superpiston.util.MathUtil.clamp;
 
 @Plugin(id = "superpiston", name = "SuperPiston", version = "1.0.0", authors = "Yeregorix", description = "Allows to modify vanilla pistons")
 public class SuperPiston {
-	public static final int CURRENT_CONFIG_VERSION = 1, MINIMUM_CONFIG_VERSION = 1;
 	public static final Logger LOGGER = LoggerFactory.getLogger("SuperPiston");
 	private static SuperPiston instance;
-	private final Map<String, Immutable> configs = new HashMap<>();
+
 	@Inject
 	private Game game;
 	@Inject
@@ -82,9 +82,11 @@ public class SuperPiston {
 	private GuiceObjectMapperFactory factory;
 	@Inject
 	private MetricsLite metrics;
+
 	private ConfigurationOptions configOptions;
 	private Path worldConfigsDir;
 
+	private Map<String, Immutable> configs = new HashMap<>();
 	private GlobalConfig.Immutable globalConfig;
 	private Text[] updateMessages = new Text[0];
 
@@ -131,7 +133,7 @@ public class SuperPiston {
 
 		CommentedConfigurationNode root = loader.load();
 		int version = root.getNode("Version").getInt();
-		if ((version > CURRENT_CONFIG_VERSION || version < MINIMUM_CONFIG_VERSION) && backupFile(file)) {
+		if ((version > GlobalConfig.CURRENT_VERSION || version < GlobalConfig.MINIMUM__VERSION) && IOUtil.backupFile(file)) {
 			LOGGER.info("Your global config version is not supported. A new one will be generated.");
 			root = loader.createEmptyNode();
 		}
@@ -145,7 +147,7 @@ public class SuperPiston {
 		if (cfg.updateCheck.consoleDelay == -1 && cfg.updateCheck.playerDelay == -1)
 			cfg.updateCheck.enabled = false;
 
-		version = CURRENT_CONFIG_VERSION;
+		version = GlobalConfig.CURRENT_VERSION;
 		root.getNode("Version").setValue(version);
 		cfgNode.setValue(GlobalConfig.TOKEN, cfg);
 		loader.save(root);
@@ -163,7 +165,7 @@ public class SuperPiston {
 
 			CommentedConfigurationNode root = loader.load();
 			int version = root.getNode("Version").getInt();
-			if ((version > CURRENT_CONFIG_VERSION || version < MINIMUM_CONFIG_VERSION) && backupFile(file)) {
+			if ((version > WorldConfig.CURRENT_VERSION || version < WorldConfig.MINIMUM__VERSION) && IOUtil.backupFile(file)) {
 				LOGGER.info("Your config version is not supported. A new one will be generated.");
 				root = loader.createEmptyNode();
 			}
@@ -179,7 +181,7 @@ public class SuperPiston {
 
 			cfg.maxBlocks = clamp(cfg.maxBlocks, 1, 500);
 
-			version = CURRENT_CONFIG_VERSION;
+			version = WorldConfig.CURRENT_VERSION;
 			root.getNode("Version").setValue(version);
 			cfgNode.setValue(WorldConfig.TOKEN, cfg);
 			loader.save(root);
@@ -245,10 +247,6 @@ public class SuperPiston {
 		return Optional.ofNullable(this.configs.get(worldName.toLowerCase()));
 	}
 
-	public PluginContainer getContainer() {
-		return this.container;
-	}
-
 	public GlobalConfig.Immutable getGlobalConfig() {
 		if (this.globalConfig == null)
 			throw new IllegalStateException("Config not loaded");
@@ -259,19 +257,8 @@ public class SuperPiston {
 		return this.updateMessages;
 	}
 
-	public static boolean backupFile(Path file) throws IOException {
-		if (!Files.exists(file))
-			return false;
-
-		String fn = file.getFileName() + ".backup";
-		Path backup = null;
-		for (int i = 0; i < 100; i++) {
-			backup = file.resolveSibling(fn + i);
-			if (!Files.exists(backup))
-				break;
-		}
-		Files.move(file, backup);
-		return true;
+	public PluginContainer getContainer() {
+		return this.container;
 	}
 
 	public static SuperPiston get() {

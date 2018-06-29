@@ -20,29 +20,26 @@
  * SOFTWARE.
  */
 
-package net.smoofyuniverse.superpiston.config.global;
+package net.smoofyuniverse.superpiston.util;
 
-import com.google.common.reflect.TypeToken;
-import ninja.leaping.configurate.objectmapping.Setting;
-import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-@ConfigSerializable
-public class GlobalConfig {
-	public static final int CURRENT_VERSION = 1, MINIMUM__VERSION = 1;
-	public static final TypeToken<GlobalConfig> TOKEN = TypeToken.of(GlobalConfig.class);
+public class IOUtil {
 
-	@Setting(value = "UpdateCheck")
-	public UpdateCheckConfig updateCheck = new UpdateCheckConfig();
+	public static boolean backupFile(Path file) throws IOException {
+		if (!Files.exists(file))
+			return false;
 
-	public Immutable toImmutable() {
-		return new Immutable(this.updateCheck.toImmutable());
-	}
-
-	public static class Immutable {
-		public final UpdateCheckConfig.Immutable updateCheck;
-
-		public Immutable(UpdateCheckConfig.Immutable updateCheck) {
-			this.updateCheck = updateCheck;
+		String fn = file.getFileName() + ".backup";
+		Path backup = null;
+		for (int i = 0; i < 100; i++) {
+			backup = file.resolveSibling(fn + i);
+			if (!Files.exists(backup))
+				break;
 		}
+		Files.move(file, backup);
+		return true;
 	}
 }
