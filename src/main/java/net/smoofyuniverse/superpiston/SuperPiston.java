@@ -63,7 +63,9 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
+import static java.lang.Math.max;
 import static net.smoofyuniverse.superpiston.util.MathUtil.clamp;
 
 @Plugin(id = "superpiston", name = "SuperPiston", version = "1.0.0", authors = "Yeregorix", description = "Allows to modify vanilla pistons")
@@ -141,6 +143,7 @@ public class SuperPiston {
 		ConfigurationNode cfgNode = root.getNode("Config");
 		GlobalConfig cfg = cfgNode.getValue(GlobalConfig.TOKEN, new GlobalConfig());
 
+		cfg.updateCheck.repetitionInterval = max(cfg.updateCheck.repetitionInterval, 0);
 		cfg.updateCheck.consoleDelay = clamp(cfg.updateCheck.consoleDelay, -1, 100);
 		cfg.updateCheck.playerDelay = clamp(cfg.updateCheck.playerDelay, -1, 100);
 
@@ -197,13 +200,15 @@ public class SuperPiston {
 		LOGGER.info("SuperPiston " + this.container.getVersion().orElse("?") + " was loaded successfully.");
 
 		if (this.globalConfig.updateCheck.enabled)
-			Task.builder().async().execute(this::checkForUpdate).submit(this);
+			Task.builder().async().interval(this.globalConfig.updateCheck.repetitionInterval, TimeUnit.HOURS).execute(this::checkForUpdate).submit(this);
 	}
 
 	public void checkForUpdate() {
 		String version = this.container.getVersion().orElse(null);
 		if (version == null)
 			return;
+
+		LOGGER.debug("Checking for update ..");
 
 		String latestVersion = null;
 		try {
