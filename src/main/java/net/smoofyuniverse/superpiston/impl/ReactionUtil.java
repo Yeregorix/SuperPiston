@@ -63,7 +63,7 @@ public class ReactionUtil {
 		if (block == Blocks.OBSIDIAN || nmsState.getBlockHardness(nmsWorld, blockPos) == -1.0f)
 			return MovementReaction.BLOCK;
 
-		return fromNMS(nmsState.getMobilityFlag());
+		return fromNMS(nmsState.getPushReaction());
 	}
 
 	public static MovementReaction fromNMS(EnumPushReaction reaction) {
