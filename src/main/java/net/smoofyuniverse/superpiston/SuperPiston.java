@@ -26,7 +26,6 @@ import com.google.inject.Inject;
 import net.smoofyuniverse.superpiston.bstats.MetricsLite;
 import net.smoofyuniverse.superpiston.config.global.GlobalConfig;
 import net.smoofyuniverse.superpiston.config.world.WorldConfig;
-import net.smoofyuniverse.superpiston.config.world.WorldConfig.Immutable;
 import net.smoofyuniverse.superpiston.event.PlayerEventListener;
 import net.smoofyuniverse.superpiston.event.WorldEventListener;
 import net.smoofyuniverse.superpiston.ore.OreAPI;
@@ -88,7 +87,7 @@ public class SuperPiston {
 	private ConfigurationOptions configOptions;
 	private Path worldConfigsDir;
 
-	private Map<String, Immutable> configs = new HashMap<>();
+	private Map<String, WorldConfig.Immutable> configs = new HashMap<>();
 	private GlobalConfig.Immutable globalConfig;
 	private Text[] updateMessages = new Text[0];
 
@@ -121,9 +120,7 @@ public class SuperPiston {
 	@Listener
 	public void onGameReload(GameReloadEvent e) {
 		this.configs.clear();
-
-		for (World w : this.game.getServer().getWorlds())
-			loadConfig(w.getName());
+		this.game.getServer().getWorlds().forEach(this::loadConfig);
 	}
 
 	public void loadGlobalConfig() throws IOException, ObjectMappingException {
@@ -150,20 +147,19 @@ public class SuperPiston {
 		if (cfg.updateCheck.consoleDelay == -1 && cfg.updateCheck.playerDelay == -1)
 			cfg.updateCheck.enabled = false;
 
-		version = GlobalConfig.CURRENT_VERSION;
-		root.getNode("Version").setValue(version);
+		root.getNode("Version").setValue(GlobalConfig.CURRENT_VERSION);
 		cfgNode.setValue(GlobalConfig.TOKEN, cfg);
 		loader.save(root);
 
 		this.globalConfig = cfg.toImmutable();
 	}
 
-	public void loadConfig(String worldName) {
-		worldName = worldName.toLowerCase();
+	public void loadConfig(World world) {
+		String name = world.getName();
 
-		LOGGER.info("Loading configuration for world " + worldName + " ..");
+		LOGGER.info("Loading configuration for world " + name + " ..");
 		try {
-			Path file = this.worldConfigsDir.resolve(worldName + ".conf");
+			Path file = this.worldConfigsDir.resolve(name + ".conf");
 			ConfigurationLoader<CommentedConfigurationNode> loader = createConfigLoader(file);
 
 			CommentedConfigurationNode root = loader.load();
@@ -189,9 +185,9 @@ public class SuperPiston {
 			cfgNode.setValue(WorldConfig.TOKEN, cfg);
 			loader.save(root);
 
-			this.configs.put(worldName, cfg.toImmutable());
+			this.configs.put(name, cfg.toImmutable());
 		} catch (Exception e) {
-			LOGGER.error("Failed to load configuration for world " + worldName, e);
+			LOGGER.error("Failed to load configuration for world " + name, e);
 		}
 	}
 
@@ -248,8 +244,8 @@ public class SuperPiston {
 		return HoconConfigurationLoader.builder().setPath(file).setDefaultOptions(this.configOptions).build();
 	}
 
-	public Optional<WorldConfig.Immutable> getConfig(String worldName) {
-		return Optional.ofNullable(this.configs.get(worldName.toLowerCase()));
+	public Optional<WorldConfig.Immutable> getConfig(World world) {
+		return Optional.ofNullable(this.configs.get(world.getName()));
 	}
 
 	public GlobalConfig.Immutable getGlobalConfig() {

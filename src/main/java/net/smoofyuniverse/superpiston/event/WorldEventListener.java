@@ -34,13 +34,13 @@ public class WorldEventListener {
 
 	@Listener
 	public void onLoadWorld(LoadWorldEvent e) {
-		SuperPiston.get().loadConfig(e.getTargetWorld().getName());
+		SuperPiston.get().loadConfig(e.getTargetWorld());
 	}
 
 	@Listener(order = Order.FIRST)
 	public void onPreStructureCalculation(PistonStructureCalculationEvent.Pre e) {
 		World world = e.getTargetWorld();
-		SuperPiston.get().getConfig(world.getName()).ifPresent(config ->
+		SuperPiston.get().getConfig(world).ifPresent(config ->
 				e.setCalculator(new SuperPistonStructureCalculator(world, e.getPiston(), e.getPistonDirection(), e.getPistonMovement(), config)));
 	}
 }
