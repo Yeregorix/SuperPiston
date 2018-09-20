@@ -28,6 +28,7 @@ import net.smoofyuniverse.superpiston.config.global.GlobalConfig;
 import net.smoofyuniverse.superpiston.config.world.WorldConfig;
 import net.smoofyuniverse.superpiston.event.PlayerEventListener;
 import net.smoofyuniverse.superpiston.event.WorldEventListener;
+import net.smoofyuniverse.superpiston.impl.internal.InternalServer;
 import net.smoofyuniverse.superpiston.ore.OreAPI;
 import net.smoofyuniverse.superpiston.util.IOUtil;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -193,7 +194,10 @@ public class SuperPiston {
 
 	@Listener
 	public void onServerStarted(GameStartedServerEvent e) {
-		LOGGER.info("SuperPiston " + this.container.getVersion().orElse("?") + " was loaded successfully.");
+		if (this.game.getServer() instanceof InternalServer)
+			LOGGER.info("SuperPiston " + this.container.getVersion().orElse("?") + " was loaded successfully.");
+		else
+			LOGGER.error("!!WARNING!! SuperPiston was not loaded correctly. Be sure that the jar file is at the root of your mods folder!");
 
 		if (this.globalConfig.updateCheck.enabled)
 			Task.builder().async().interval(this.globalConfig.updateCheck.repetitionInterval, TimeUnit.HOURS).execute(this::checkForUpdate).submit(this);
