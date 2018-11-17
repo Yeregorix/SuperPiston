@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.max;
 import static net.smoofyuniverse.superpiston.util.MathUtil.clamp;
 
-@Plugin(id = "superpiston", name = "SuperPiston", version = "1.0.2", authors = "Yeregorix", description = "Allows to modify vanilla pistons")
+@Plugin(id = "superpiston", name = "SuperPiston", version = "1.0.3", authors = "Yeregorix", description = "Allows to modify vanilla pistons")
 public class SuperPiston {
 	public static final Logger LOGGER = LoggerFactory.getLogger("SuperPiston");
 	private static SuperPiston instance;
