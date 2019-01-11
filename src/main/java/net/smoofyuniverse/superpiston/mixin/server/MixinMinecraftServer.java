@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package net.smoofyuniverse.superpiston.mixin;
+package net.smoofyuniverse.superpiston.mixin.server;
 
 import net.minecraft.server.MinecraftServer;
 import net.smoofyuniverse.superpiston.impl.internal.InternalServer;

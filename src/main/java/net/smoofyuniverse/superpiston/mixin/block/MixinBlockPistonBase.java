@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package net.smoofyuniverse.superpiston.mixin;
+package net.smoofyuniverse.superpiston.mixin.block;
 
 import net.minecraft.block.BlockPistonBase;
 import net.minecraft.block.material.EnumPushReaction;

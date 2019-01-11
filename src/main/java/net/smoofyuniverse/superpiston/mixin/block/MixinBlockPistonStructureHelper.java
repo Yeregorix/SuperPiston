@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package net.smoofyuniverse.superpiston.mixin;
+package net.smoofyuniverse.superpiston.mixin.block;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.minecraft.block.state.BlockPistonStructureHelper;
