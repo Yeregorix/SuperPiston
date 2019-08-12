@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(BlockPistonBase.class)
-public abstract class MixinBlockPistonBase {
+public abstract class BlockPistonBaseMixin {
 
 	@Redirect(method = "eventReceived", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/state/IBlockState;getPushReaction()Lnet/minecraft/block/material/EnumPushReaction;"))
 	public EnumPushReaction onGetPushReaction(IBlockState stateIn, IBlockState state, World world, BlockPos pos, int id, int param) {

@@ -27,6 +27,6 @@ import net.smoofyuniverse.superpiston.impl.internal.InternalServer;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(MinecraftServer.class)
-public class MixinMinecraftServer implements InternalServer {
+public class MinecraftServerMixin implements InternalServer {
 
 }

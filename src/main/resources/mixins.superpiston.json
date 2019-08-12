@@ -6,9 +6,9 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "mixins.superpiston.refmap.json",
   "server": [
-    "block.MixinBlockPistonBase",
-    "block.MixinBlockPistonStructureHelper",
-    "server.MixinMinecraftServer"
+    "block.BlockPistonBaseMixin",
+    "block.BlockPistonStructureHelperMixin",
+    "server.MinecraftServerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

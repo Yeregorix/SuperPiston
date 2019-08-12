@@ -51,7 +51,7 @@ import org.spongepowered.common.util.VecHelper;
 import java.util.List;
 
 @Mixin(BlockPistonStructureHelper.class)
-public class MixinBlockPistonStructureHelper {
+public class BlockPistonStructureHelperMixin {
 	@Shadow
 	@Final
 	private World world;
