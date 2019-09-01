@@ -45,7 +45,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.common.data.util.DirectionResolver;
+import org.spongepowered.common.util.Constants;
 import org.spongepowered.common.util.VecHelper;
 
 import java.util.List;
@@ -68,7 +68,7 @@ public class BlockPistonStructureHelperMixin {
 	@Inject(method = "<init>", at = @At("RETURN"))
 	public void onInit(World world, BlockPos pos, EnumFacing pistonFacing, boolean extending, CallbackInfo ci) {
 		this.piston = ((org.spongepowered.api.world.World) this.world).createSnapshot(pos.getX(), pos.getY(), pos.getZ());
-		this.direction = DirectionResolver.getFor(pistonFacing);
+		this.direction = Constants.DirectionFunctions.getFor(pistonFacing);
 		this.movement = extending ? this.direction : this.direction.getOpposite();
 	}
 
