@@ -222,7 +222,7 @@ public class SuperPiston {
 			LOGGER.info("Failed to check for update", e);
 		}
 
-		if (latestVersion != null && !latestVersion.equals(version)) {
+		if (latestVersion != null && !latestVersion.name.equals(version)) {
 			Text msg1 = Text.join(Text.of("A new version of SuperPiston is available: "),
 					Text.builder(latestVersion.name).color(TextColors.AQUA).build(),
 					Text.of(". You're currently using version: "),
