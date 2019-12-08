@@ -23,12 +23,14 @@
 package net.smoofyuniverse.superpiston;
 
 import com.google.inject.Inject;
+import net.smoofyuniverse.ore.OreAPI;
+import net.smoofyuniverse.ore.project.OreProject;
+import net.smoofyuniverse.ore.project.OreVersion;
 import net.smoofyuniverse.superpiston.config.global.GlobalConfig;
 import net.smoofyuniverse.superpiston.config.world.WorldConfig;
 import net.smoofyuniverse.superpiston.event.PlayerEventListener;
 import net.smoofyuniverse.superpiston.event.WorldEventListener;
 import net.smoofyuniverse.superpiston.impl.internal.InternalServer;
-import net.smoofyuniverse.superpiston.ore.OreAPI;
 import net.smoofyuniverse.superpiston.util.IOUtil;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
@@ -86,6 +88,9 @@ public class SuperPiston {
 
 	private Map<String, WorldConfig.Immutable> configs = new HashMap<>();
 	private GlobalConfig.Immutable globalConfig;
+
+	private OreAPI oreAPI;
+	private OreProject oreProject;
 	private Text[] updateMessages = new Text[0];
 
 	public SuperPiston() {
@@ -195,8 +200,12 @@ public class SuperPiston {
 		else
 			LOGGER.error("!!WARNING!! SuperPiston was not loaded correctly. Be sure that the jar file is at the root of your mods folder!");
 
-		if (this.globalConfig.updateCheck.enabled)
+		if (this.globalConfig.updateCheck.enabled) {
+			this.oreAPI = new OreAPI();
+			this.oreProject = new OreProject("superpiston");
+			this.oreProject.setNamespace("Yeregorix", "SuperPiston");
 			Task.builder().async().interval(this.globalConfig.updateCheck.repetitionInterval, TimeUnit.HOURS).execute(this::checkForUpdate).submit(this);
+		}
 	}
 
 	public void checkForUpdate() {
@@ -206,18 +215,16 @@ public class SuperPiston {
 
 		LOGGER.debug("Checking for update ..");
 
-		String latestVersion = null;
+		OreVersion latestVersion = null;
 		try {
-			latestVersion = OreAPI.getLatestVersion(OreAPI.getProjectVersions("superpiston"), (major, minor) -> major == 7).orElse(null);
+			latestVersion = OreVersion.getLatest(this.oreProject.getVersions(this.oreAPI), v -> v.apiVersion.charAt(0) == '7').orElse(null);
 		} catch (Exception e) {
 			LOGGER.info("Failed to check for update", e);
 		}
 
 		if (latestVersion != null && !latestVersion.equals(version)) {
-			String downloadUrl = "https://ore.spongepowered.org/Yeregorix/SuperPiston/versions/" + latestVersion;
-
 			Text msg1 = Text.join(Text.of("A new version of SuperPiston is available: "),
-					Text.builder(latestVersion).color(TextColors.AQUA).build(),
+					Text.builder(latestVersion.name).color(TextColors.AQUA).build(),
 					Text.of(". You're currently using version: "),
 					Text.builder(version).color(TextColors.AQUA).build(),
 					Text.of("."));
@@ -225,7 +232,7 @@ public class SuperPiston {
 			Text msg2;
 			try {
 				msg2 = Text.builder("Click here to open the download page.").color(TextColors.GOLD)
-						.onClick(TextActions.openUrl(new URL(downloadUrl))).build();
+						.onClick(TextActions.openUrl(new URL(latestVersion.getPage()))).build();
 			} catch (MalformedURLException e) {
 				msg2 = null;
 			}
