@@ -28,30 +28,54 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * This immutable object represents blocks that will be moved or destroyed by a piston movement.
+ * If the structure is not moveable then the piston can't move and no blocks will be affected.
+ */
 public final class PistonStructure {
 	private final List<Vector3i> blocksToMove, blocksToDestroy;
 	private final boolean moveable;
 
+	/**
+	 * Constructs a moveable structure.
+	 *
+	 * @param blocksToMove    The block that will be moved.
+	 * @param blocksToDestroy The blocks that will be destroyed.
+	 */
 	public PistonStructure(Collection<Vector3i> blocksToMove, Collection<Vector3i> blocksToDestroy) {
 		this.blocksToMove = ImmutableList.copyOf(blocksToMove);
 		this.blocksToDestroy = ImmutableList.copyOf(blocksToDestroy);
 		this.moveable = true;
 	}
 
+	/**
+	 * Constructs a structure with no blocks.
+	 *
+	 * @param moveable Whether this structure is moveable or not.
+	 */
 	public PistonStructure(boolean moveable) {
 		this.blocksToMove = ImmutableList.of();
 		this.blocksToDestroy = ImmutableList.of();
 		this.moveable = moveable;
 	}
 
+	/**
+	 * @return The list of blocks that will be moved.
+	 */
 	public List<Vector3i> getBlocksToMove() {
 		return this.blocksToMove;
 	}
 
+	/**
+	 * @return The list of blocks that will be destroyed.
+	 */
 	public List<Vector3i> getBlocksToDestroy() {
 		return this.blocksToDestroy;
 	}
 
+	/**
+	 * @return Whether this structure is moveable or not.
+	 */
 	public boolean isMoveable() {
 		return this.moveable;
 	}

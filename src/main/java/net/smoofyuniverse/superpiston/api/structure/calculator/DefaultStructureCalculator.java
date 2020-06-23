@@ -37,6 +37,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A {@link PistonStructureCalculator} implementing the behavior of the vanilla pistons.
+ */
 public class DefaultStructureCalculator implements PistonStructureCalculator {
 	private static final Direction[] CARDINALS = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
 

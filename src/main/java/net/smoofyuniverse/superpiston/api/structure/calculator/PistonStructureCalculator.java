@@ -24,7 +24,15 @@ package net.smoofyuniverse.superpiston.api.structure.calculator;
 
 import net.smoofyuniverse.superpiston.api.structure.PistonStructure;
 
+/**
+ * A calculator that can calculate a {@link PistonStructure}.
+ */
 public interface PistonStructureCalculator {
 
+	/**
+	 * Calculates a {@link PistonStructure}.
+	 *
+	 * @return The structure.
+	 */
 	PistonStructure calculateStructure();
 }
