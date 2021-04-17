@@ -29,11 +29,9 @@ import net.smoofyuniverse.superpiston.event.WorldEventListener;
 import net.smoofyuniverse.superpiston.impl.internal.InternalServer;
 import net.smoofyuniverse.superpiston.util.IOUtil;
 import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
-import ninja.leaping.configurate.objectmapping.GuiceObjectMapperFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
@@ -67,10 +65,7 @@ public class SuperPiston {
 	private Path configDir;
 	@Inject
 	private PluginContainer container;
-	@Inject
-	private GuiceObjectMapperFactory factory;
 
-	private ConfigurationOptions configOptions;
 	private Path worldConfigsDir;
 
 	private final Map<String, WorldConfig.Immutable> configs = new HashMap<>();
@@ -88,7 +83,6 @@ public class SuperPiston {
 			Files.createDirectories(this.worldConfigsDir);
 		} catch (IOException ignored) {
 		}
-		this.configOptions = ConfigurationOptions.defaults().withObjectMapperFactory(this.factory);
 
 		this.game.getEventManager().registerListeners(this, new WorldEventListener());
 
@@ -148,7 +142,7 @@ public class SuperPiston {
 	}
 
 	public ConfigurationLoader<CommentedConfigurationNode> createConfigLoader(Path file) {
-		return HoconConfigurationLoader.builder().setPath(file).setDefaultOptions(this.configOptions).build();
+		return HoconConfigurationLoader.builder().setPath(file).build();
 	}
 
 	public Optional<WorldConfig.Immutable> getConfig(World world) {
