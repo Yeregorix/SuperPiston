@@ -74,6 +74,7 @@ repositories {
 dependencies {
     compile 'org.spongepowered:spongecommon:1.12.2-7.3.0:dev'
     compile 'net.smoofyuniverse:oreupdater:1.0.1'
+    compile 'net.smoofyuniverse:worldmap:1.0.0'
 }
 
 jar {
@@ -99,9 +100,11 @@ shadowJar {
     dependencies {
         include dependency('net.smoofyuniverse:oreapi')
         include dependency('net.smoofyuniverse:oreupdater')
+        include dependency('net.smoofyuniverse:worldmap')
     }
 
     relocate 'net.smoofyuniverse.ore', 'net.smoofyuniverse.superpiston.ore'
+    relocate 'net.smoofyuniverse.map', 'net.smoofyuniverse.autopickup.map'
 
     exclude "dummyThing"
     afterEvaluate {

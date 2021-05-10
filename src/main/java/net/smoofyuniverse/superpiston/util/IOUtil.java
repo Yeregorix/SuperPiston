@@ -22,24 +22,40 @@
 
 package net.smoofyuniverse.superpiston.util;
 
+import net.smoofyuniverse.superpiston.SuperPiston;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class IOUtil {
 
-	public static boolean backupFile(Path file) throws IOException {
+	public static ConfigurationLoader<CommentedConfigurationNode> createConfigLoader(Path file) {
+		return HoconConfigurationLoader.builder().setPath(file).build();
+	}
+
+	public static Optional<Path> backup(Path file) {
 		if (!Files.exists(file))
-			return false;
+			return Optional.empty();
 
 		String fn = file.getFileName() + ".backup";
-		Path backup = null;
-		for (int i = 0; i < 100; i++) {
-			backup = file.resolveSibling(fn + i);
-			if (!Files.exists(backup))
-				break;
+		Path backup;
+		int i = 0;
+		while (Files.exists(backup = file.resolveSibling(fn + i))) {
+			i++;
 		}
-		Files.move(file, backup);
-		return true;
+
+		try {
+			Files.move(file, backup);
+		} catch (IOException e) {
+			SuperPiston.LOGGER.warn("Failed to backup: " + backup, e);
+			return Optional.empty();
+		}
+
+		return Optional.of(backup);
 	}
 }

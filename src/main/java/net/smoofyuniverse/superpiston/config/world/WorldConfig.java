@@ -24,27 +24,60 @@ package net.smoofyuniverse.superpiston.config.world;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
+import net.smoofyuniverse.superpiston.SuperPiston;
 import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureCalculator.MovementReaction;
+import net.smoofyuniverse.superpiston.util.IOUtil;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.block.BlockState;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
+
+import static net.smoofyuniverse.superpiston.util.MathUtil.clamp;
 
 @ConfigSerializable
 public class WorldConfig {
 	public static final int CURRENT_VERSION = 1, MINIMUM__VERSION = 1;
 	public static final TypeToken<WorldConfig> TOKEN = TypeToken.of(WorldConfig.class);
+	public static final Immutable VANILLA = new WorldConfig().toImmutable();
 
 	@Setting(value = "BlockReactions")
-	public Map<BlockState, MovementReaction> blockReactions;
+	public Map<BlockState, MovementReaction> blockReactions = new HashMap<>();
 	@Setting(value = "StickyBlocks")
-	public Map<BlockState, Boolean> stickyBlocks;
+	public Map<BlockState, Boolean> stickyBlocks = new HashMap<>();
 	@Setting(value = "MaxBlocks")
 	public int maxBlocks = 12;
 
 	public Immutable toImmutable() {
 		return new Immutable(this.blockReactions, this.stickyBlocks, this.maxBlocks);
+	}
+
+	public static WorldConfig load(Path file) throws IOException, ObjectMappingException {
+		ConfigurationLoader<CommentedConfigurationNode> loader = IOUtil.createConfigLoader(file);
+
+		CommentedConfigurationNode root = loader.load();
+		int version = root.getNode("Version").getInt();
+		if ((version > CURRENT_VERSION || version < MINIMUM__VERSION) && IOUtil.backup(file).isPresent()) {
+			SuperPiston.LOGGER.info("Your config version is not supported. A new one will be generated.");
+			root = loader.createEmptyNode();
+		}
+
+		ConfigurationNode cfgNode = root.getNode("Config");
+		WorldConfig cfg = cfgNode.getValue(TOKEN, new WorldConfig());
+
+		cfg.maxBlocks = clamp(cfg.maxBlocks, 1, 500);
+
+		root.getNode("Version").setValue(CURRENT_VERSION);
+		cfgNode.setValue(TOKEN, cfg);
+		loader.save(root);
+		return cfg;
 	}
 
 	public static class Immutable {

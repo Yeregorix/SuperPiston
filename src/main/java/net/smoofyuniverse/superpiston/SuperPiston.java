@@ -23,21 +23,21 @@
 package net.smoofyuniverse.superpiston;
 
 import com.google.inject.Inject;
+import net.smoofyuniverse.map.WorldMap;
+import net.smoofyuniverse.map.WorldMapLoader;
 import net.smoofyuniverse.ore.update.UpdateChecker;
 import net.smoofyuniverse.superpiston.config.world.WorldConfig;
-import net.smoofyuniverse.superpiston.event.WorldEventListener;
+import net.smoofyuniverse.superpiston.config.world.WorldConfig.Immutable;
+import net.smoofyuniverse.superpiston.event.PistonListener;
 import net.smoofyuniverse.superpiston.impl.internal.InternalServer;
 import net.smoofyuniverse.superpiston.util.IOUtil;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.GameReloadEvent;
+import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
@@ -47,11 +47,6 @@ import org.spongepowered.api.world.World;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static net.smoofyuniverse.superpiston.util.MathUtil.clamp;
 
 @Plugin(id = "superpiston", name = "SuperPiston", version = "1.0.7", authors = "Yeregorix", description = "Allows to modify vanilla pistons")
 public class SuperPiston {
@@ -66,9 +61,8 @@ public class SuperPiston {
 	@Inject
 	private PluginContainer container;
 
-	private Path worldConfigsDir;
-
-	private final Map<String, WorldConfig.Immutable> configs = new HashMap<>();
+	private WorldMapLoader<Immutable> configMapLoader;
+	private WorldMap<Immutable> configMap;
 
 	public SuperPiston() {
 		if (instance != null)
@@ -78,59 +72,44 @@ public class SuperPiston {
 
 	@Listener
 	public void onGamePreInit(GamePreInitializationEvent e) {
-		this.worldConfigsDir = this.configDir.resolve("worlds");
 		try {
-			Files.createDirectories(this.worldConfigsDir);
+			Files.createDirectories(this.configDir);
 		} catch (IOException ignored) {
 		}
 
-		this.game.getEventManager().registerListeners(this, new WorldEventListener());
+		this.configMapLoader = new WorldMapLoader<WorldConfig.Immutable>(LOGGER,
+				IOUtil.createConfigLoader(this.configDir.resolve("map.conf")),
+				this.configDir.resolve("configs"), WorldConfig.VANILLA) {
+			@Override
+			protected WorldConfig.Immutable loadConfig(Path file) throws Exception {
+				return WorldConfig.load(file).toImmutable();
+			}
+		};
+	}
+
+	@Listener
+	public void onGameInit(GameInitializationEvent e) {
+		loadConfigs();
+
+		this.game.getEventManager().registerListeners(this, new PistonListener(this));
 
 		this.game.getEventManager().registerListeners(this, new UpdateChecker(LOGGER, this.container,
-				createConfigLoader(this.configDir.resolve("update.conf")), "Yeregorix", "SuperPiston"));
+				IOUtil.createConfigLoader(this.configDir.resolve("update.conf")), "Yeregorix", "SuperPiston"));
+	}
+
+	private void loadConfigs() {
+		if (Files.exists(this.configDir.resolve("worlds")) && Files.notExists(this.configDir.resolve("map.conf"))) {
+			LOGGER.info("Updating config directory structure ...");
+			Path worlds = IOUtil.backup(this.configDir).orElse(this.configDir).resolve("worlds");
+			this.configMap = this.configMapLoader.importWorlds(worlds);
+		} else {
+			this.configMap = this.configMapLoader.load();
+		}
 	}
 
 	@Listener
 	public void onGameReload(GameReloadEvent e) {
-		this.configs.clear();
-		this.game.getServer().getWorlds().forEach(this::loadConfig);
-	}
-
-	public void loadConfig(World world) {
-		String name = world.getName();
-
-		LOGGER.info("Loading configuration for world " + name + " ..");
-		try {
-			Path file = this.worldConfigsDir.resolve(name + ".conf");
-			ConfigurationLoader<CommentedConfigurationNode> loader = createConfigLoader(file);
-
-			CommentedConfigurationNode root = loader.load();
-			int version = root.getNode("Version").getInt();
-			if ((version > WorldConfig.CURRENT_VERSION || version < WorldConfig.MINIMUM__VERSION) && IOUtil.backupFile(file)) {
-				LOGGER.info("Your config version is not supported. A new one will be generated.");
-				root = loader.createEmptyNode();
-			}
-
-			ConfigurationNode cfgNode = root.getNode("Config");
-			WorldConfig cfg = cfgNode.getValue(WorldConfig.TOKEN, new WorldConfig());
-
-			if (cfg.blockReactions == null)
-				cfg.blockReactions = new HashMap<>();
-
-			if (cfg.stickyBlocks == null)
-				cfg.stickyBlocks = new HashMap<>();
-
-			cfg.maxBlocks = clamp(cfg.maxBlocks, 1, 500);
-
-			version = WorldConfig.CURRENT_VERSION;
-			root.getNode("Version").setValue(version);
-			cfgNode.setValue(WorldConfig.TOKEN, cfg);
-			loader.save(root);
-
-			this.configs.put(name, cfg.toImmutable());
-		} catch (Exception e) {
-			LOGGER.error("Failed to load configuration for world " + name, e);
-		}
+		loadConfigs();
 	}
 
 	@Listener
@@ -141,12 +120,8 @@ public class SuperPiston {
 			LOGGER.error("!!WARNING!! SuperPiston was not loaded correctly. Be sure that the jar file is at the root of your mods folder!");
 	}
 
-	public ConfigurationLoader<CommentedConfigurationNode> createConfigLoader(Path file) {
-		return HoconConfigurationLoader.builder().setPath(file).build();
-	}
-
-	public Optional<WorldConfig.Immutable> getConfig(World world) {
-		return Optional.ofNullable(this.configs.get(world.getName()));
+	public WorldConfig.Immutable getConfig(World world) {
+		return this.configMap.get(world.getProperties());
 	}
 
 	public PluginContainer getContainer() {

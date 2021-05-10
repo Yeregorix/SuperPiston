@@ -27,20 +27,19 @@ import net.smoofyuniverse.superpiston.api.event.PistonStructureCalculationEvent;
 import net.smoofyuniverse.superpiston.impl.calculator.SuperPistonStructureCalculator;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.world.World;
 
-public class WorldEventListener {
+public class PistonListener {
+	private final SuperPiston plugin;
 
-	@Listener
-	public void onLoadWorld(LoadWorldEvent e) {
-		SuperPiston.get().loadConfig(e.getTargetWorld());
+	public PistonListener(SuperPiston plugin) {
+		this.plugin = plugin;
 	}
 
 	@Listener(order = Order.FIRST)
 	public void onPreStructureCalculation(PistonStructureCalculationEvent.Pre e) {
 		World world = e.getTargetWorld();
-		SuperPiston.get().getConfig(world).ifPresent(config ->
-				e.setCalculator(new SuperPistonStructureCalculator(world, e.getPiston(), e.getPistonDirection(), e.getPistonMovement(), config)));
+		e.setCalculator(new SuperPistonStructureCalculator(world,
+				e.getPiston(), e.getPistonDirection(), e.getPistonMovement(), this.plugin.getConfig(world)));
 	}
 }
