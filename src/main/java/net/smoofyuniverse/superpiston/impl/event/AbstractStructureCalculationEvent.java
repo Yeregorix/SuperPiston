@@ -24,19 +24,19 @@ package net.smoofyuniverse.superpiston.impl.event;
 
 import net.smoofyuniverse.superpiston.api.event.PistonStructureCalculationEvent;
 import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.event.impl.AbstractEvent;
 import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
 
 public abstract class AbstractStructureCalculationEvent extends AbstractEvent implements PistonStructureCalculationEvent {
 	private final Cause cause;
-	private final World world;
+	private final ServerWorld world;
 	private final BlockSnapshot piston;
 	private final Direction direction, movement;
 	private boolean cancelled = false;
 
-	public AbstractStructureCalculationEvent(Cause cause, World world, BlockSnapshot piston, Direction direction, Direction movement) {
+	public AbstractStructureCalculationEvent(Cause cause, ServerWorld world, BlockSnapshot piston, Direction direction, Direction movement) {
 		this.cause = cause;
 		this.world = world;
 		this.piston = piston;
@@ -45,27 +45,27 @@ public abstract class AbstractStructureCalculationEvent extends AbstractEvent im
 	}
 
 	@Override
-	public Cause getCause() {
+	public Cause cause() {
 		return this.cause;
 	}
 
 	@Override
-	public World getTargetWorld() {
+	public ServerWorld world() {
 		return this.world;
 	}
 
 	@Override
-	public BlockSnapshot getPiston() {
+	public BlockSnapshot piston() {
 		return this.piston;
 	}
 
 	@Override
-	public Direction getPistonDirection() {
+	public Direction pistonDirection() {
 		return this.direction;
 	}
 
 	@Override
-	public Direction getPistonMovement() {
+	public Direction pistonMovement() {
 		return this.movement;
 	}
 

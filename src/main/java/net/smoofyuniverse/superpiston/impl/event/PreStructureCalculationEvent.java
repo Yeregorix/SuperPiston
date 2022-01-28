@@ -25,27 +25,27 @@ package net.smoofyuniverse.superpiston.impl.event;
 import net.smoofyuniverse.superpiston.api.event.PistonStructureCalculationEvent;
 import net.smoofyuniverse.superpiston.api.structure.calculator.PistonStructureCalculator;
 import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
 
 public class PreStructureCalculationEvent extends AbstractStructureCalculationEvent implements PistonStructureCalculationEvent.Pre {
 	private final PistonStructureCalculator originalCalculator;
 	private PistonStructureCalculator calculator;
 
-	public PreStructureCalculationEvent(Cause cause, World world, BlockSnapshot piston, Direction direction, Direction movement, PistonStructureCalculator calculator) {
+	public PreStructureCalculationEvent(Cause cause, ServerWorld world, BlockSnapshot piston, Direction direction, Direction movement, PistonStructureCalculator calculator) {
 		super(cause, world, piston, direction, movement);
 		this.originalCalculator = calculator;
 		this.calculator = calculator;
 	}
 
 	@Override
-	public PistonStructureCalculator getOriginalCalculator() {
+	public PistonStructureCalculator originalCalculator() {
 		return this.originalCalculator;
 	}
 
 	@Override
-	public PistonStructureCalculator getCalculator() {
+	public PistonStructureCalculator calculator() {
 		return this.calculator;
 	}
 

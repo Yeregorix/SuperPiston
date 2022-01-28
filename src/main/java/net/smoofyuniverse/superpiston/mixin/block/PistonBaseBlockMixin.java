@@ -22,26 +22,26 @@
 
 package net.smoofyuniverse.superpiston.mixin.block;
 
-import net.minecraft.block.BlockPistonBase;
-import net.minecraft.block.material.EnumPushReaction;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(BlockPistonBase.class)
-public abstract class BlockPistonBaseMixin {
+@Mixin(PistonBaseBlock.class)
+public abstract class PistonBaseBlockMixin {
 
-	@Redirect(method = "eventReceived", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/state/IBlockState;getPushReaction()Lnet/minecraft/block/material/EnumPushReaction;"))
-	public EnumPushReaction onGetPushReaction(IBlockState stateIn, IBlockState state, World world, BlockPos pos, int id, int param) {
-		return EnumPushReaction.NORMAL;
+	@Redirect(method = "triggerEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getPistonPushReaction()Lnet/minecraft/world/level/material/PushReaction;"))
+	public PushReaction alwaysPushNormal(BlockState stateIn, BlockState state, Level level, BlockPos pos, int id, int param) {
+		return PushReaction.NORMAL;
 	}
 
-	@Redirect(method = "eventReceived", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockPistonBase;canPush(Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/EnumFacing;ZLnet/minecraft/util/EnumFacing;)Z"))
-	public boolean onCanPull(IBlockState state, World world, BlockPos pos, EnumFacing facing, boolean destroy, EnumFacing facing2) {
+	@Redirect(method = "triggerEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/piston/PistonBaseBlock;isPushable(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;ZLnet/minecraft/core/Direction;)Z"))
+	public boolean alwaysPushable(BlockState state, Level level, BlockPos pos, Direction facing, boolean destroy, Direction facing2) {
 		return true;
 	}
 }

@@ -22,8 +22,8 @@
 
 package net.smoofyuniverse.superpiston.api.structure;
 
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.ImmutableList;
+import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Collection;
 import java.util.List;

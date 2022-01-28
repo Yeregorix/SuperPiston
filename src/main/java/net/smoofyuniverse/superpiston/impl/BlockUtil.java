@@ -22,34 +22,16 @@
 
 package net.smoofyuniverse.superpiston.impl;
 
-import com.flowpowered.math.vector.Vector3i;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.world.IBlockAccess;
-import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.world.World;
-import org.spongepowered.common.util.VecHelper;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 
 public class BlockUtil {
-	private static final boolean useForge = detectForge();
 
-	@SuppressWarnings("deprecation")
-	public static boolean hasTileEntity(BlockState state) {
-		IBlockState nmsState = (IBlockState) state;
-		return useForge ? nmsState.getBlock().hasTileEntity(nmsState) : nmsState.getBlock().hasTileEntity();
+	public static boolean isEntityBlock(org.spongepowered.api.block.BlockState state) {
+		return ((BlockState) state).getBlock().isEntityBlock();
 	}
 
-	public static boolean isAir(World world, BlockState state, Vector3i pos) {
-		IBlockState nmsState = (IBlockState) state;
-		return useForge ? nmsState.getBlock().isAir(nmsState, (IBlockAccess) world, VecHelper.toBlockPos(pos)) : nmsState.getMaterial() == Material.AIR;
-	}
-
-	private static boolean detectForge() {
-		try {
-			Class.forName("net.minecraftforge.common.ForgeVersion");
-			return true;
-		} catch (ClassNotFoundException e) {
-			return false;
-		}
+	public static boolean isAir(org.spongepowered.api.block.BlockState state) {
+		return ((BlockState) state).getMaterial() == Material.AIR;
 	}
 }

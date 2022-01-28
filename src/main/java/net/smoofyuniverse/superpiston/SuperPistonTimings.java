@@ -26,5 +26,5 @@ import co.aikar.timings.Timing;
 import co.aikar.timings.Timings;
 
 public class SuperPistonTimings {
-	public static final Timing CALCULATION = Timings.of(SuperPiston.get(), "Calculation");
+	public static final Timing CALCULATION = Timings.of(SuperPiston.get().getContainer(), "Calculation");
 }

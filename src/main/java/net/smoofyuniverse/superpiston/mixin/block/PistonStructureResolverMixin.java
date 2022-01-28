@@ -22,11 +22,9 @@
 
 package net.smoofyuniverse.superpiston.mixin.block;
 
-import com.flowpowered.math.vector.Vector3i;
-import net.minecraft.block.state.BlockPistonStructureHelper;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.smoofyuniverse.superpiston.SuperPiston;
 import net.smoofyuniverse.superpiston.SuperPistonTimings;
 import net.smoofyuniverse.superpiston.api.structure.PistonStructure;
@@ -36,8 +34,9 @@ import net.smoofyuniverse.superpiston.impl.event.PostStructureCalculationEvent;
 import net.smoofyuniverse.superpiston.impl.event.PreStructureCalculationEvent;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -47,17 +46,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.util.Constants;
 import org.spongepowered.common.util.VecHelper;
+import org.spongepowered.math.vector.Vector3i;
 
 import java.util.List;
 
-@Mixin(BlockPistonStructureHelper.class)
-public class BlockPistonStructureHelperMixin {
+@Mixin(PistonStructureResolver.class)
+public class PistonStructureResolverMixin {
 	@Shadow
 	@Final
-	private World world;
+	private Level level;
 	@Shadow
 	@Final
-	private List<BlockPos> toMove;
+	private List<BlockPos> toPush;
 	@Shadow
 	@Final
 	private List<BlockPos> toDestroy;
@@ -66,17 +66,17 @@ public class BlockPistonStructureHelperMixin {
 	private BlockSnapshot piston;
 
 	@Inject(method = "<init>", at = @At("RETURN"))
-	public void onInit(World world, BlockPos pos, EnumFacing pistonFacing, boolean extending, CallbackInfo ci) {
-		this.piston = ((org.spongepowered.api.world.World) this.world).createSnapshot(pos.getX(), pos.getY(), pos.getZ());
-		this.direction = Constants.DirectionFunctions.getFor(pistonFacing);
-		this.movement = extending ? this.direction : this.direction.getOpposite();
+	public void onInit(Level level, BlockPos pos, net.minecraft.core.Direction pistonDirection, boolean extending, CallbackInfo ci) {
+		this.piston = ((ServerWorld) this.level).createSnapshot(pos.getX(), pos.getY(), pos.getZ());
+		this.direction = Constants.DirectionFunctions.getFor(pistonDirection);
+		this.movement = extending ? this.direction : this.direction.opposite();
 	}
 
 	/**
 	 * @author Yeregorix
 	 */
 	@Overwrite
-	public boolean canMove() {
+	public boolean resolve() {
 		SuperPistonTimings.CALCULATION.startTiming();
 		boolean r = calculate();
 		SuperPistonTimings.CALCULATION.stopTiming();
@@ -85,21 +85,21 @@ public class BlockPistonStructureHelperMixin {
 	}
 
 	public boolean calculate() {
-		this.toMove.clear();
+		this.toPush.clear();
 		this.toDestroy.clear();
 
-		Cause cause = Sponge.getCauseStackManager().getCurrentCause();
+		Cause cause = Sponge.server().causeStackManager().currentCause();
 
 		PreStructureCalculationEvent preEvent = new PreStructureCalculationEvent(
-				cause, (org.spongepowered.api.world.World) this.world, this.piston, this.direction, this.movement,
-				new DefaultStructureCalculator((org.spongepowered.api.world.World) this.world, this.piston, this.direction, this.movement));
+				cause, (ServerWorld) this.level, this.piston, this.direction, this.movement,
+				new DefaultStructureCalculator((ServerWorld) this.level, this.piston, this.direction, this.movement));
 
-		Sponge.getEventManager().post(preEvent);
+		Sponge.eventManager().post(preEvent);
 
 		if (preEvent.isCancelled())
 			return false;
 
-		PistonStructureCalculator calculator = preEvent.getCalculator();
+		PistonStructureCalculator calculator = preEvent.calculator();
 		PistonStructure structure = null;
 		try {
 			structure = calculator.calculateStructure();
@@ -111,16 +111,16 @@ public class BlockPistonStructureHelperMixin {
 			return false;
 
 		PostStructureCalculationEvent postEvent = new PostStructureCalculationEvent(
-				cause, (org.spongepowered.api.world.World) this.world, this.piston, this.direction, this.movement,
+				cause, (ServerWorld) this.level, this.piston, this.direction, this.movement,
 				calculator, structure);
 
-		Sponge.getEventManager().post(postEvent);
+		Sponge.eventManager().post(postEvent);
 
 		if (postEvent.isCancelled())
 			return false;
 
 		for (Vector3i pos : structure.getBlocksToMove())
-			this.toMove.add(VecHelper.toBlockPos(pos));
+			this.toPush.add(VecHelper.toBlockPos(pos));
 
 		for (Vector3i pos : structure.getBlocksToDestroy())
 			this.toDestroy.add(VecHelper.toBlockPos(pos));

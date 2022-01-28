@@ -22,51 +22,50 @@
 
 package net.smoofyuniverse.superpiston.impl;
 
-import com.flowpowered.math.vector.Vector3i;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockPistonBase;
-import net.minecraft.block.material.EnumPushReaction;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
 import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureCalculator.MovementReaction;
-import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.common.util.VecHelper;
+import org.spongepowered.math.vector.Vector3i;
 
 public class ReactionUtil {
 
-	public static MovementReaction getDefaultReaction(World world, BlockState state, Vector3i pos, Direction movement) {
+	public static MovementReaction getDefaultReaction(ServerWorld world, org.spongepowered.api.block.BlockState state, Vector3i pos, Direction movement) {
 		BlockPos blockPos = VecHelper.toBlockPos(pos);
-		net.minecraft.world.World nmsWorld = (net.minecraft.world.World) world;
+		ServerLevel level = (ServerLevel) world;
 
-		if (!nmsWorld.getWorldBorder().contains(blockPos))
+		if (!level.getWorldBorder().isWithinBounds(blockPos))
 			return MovementReaction.BLOCK;
 
-		if (pos.getY() < 0 || (movement == Direction.DOWN && pos.getY() == 0))
+		if (pos.y() < 0 || (movement == Direction.DOWN && pos.y() == 0))
 			return MovementReaction.BLOCK;
 
-		int h = nmsWorld.getHeight() - 1;
-		if (pos.getY() > h || (movement == Direction.UP && pos.getY() == h))
+		int h = level.getMaxBuildHeight() - 1;
+		if (pos.y() > h || (movement == Direction.UP && pos.y() == h))
 			return MovementReaction.BLOCK;
 
-		if (BlockUtil.hasTileEntity(state))
+		if (BlockUtil.isEntityBlock(state))
 			return MovementReaction.BLOCK;
 
-		IBlockState nmsState = (IBlockState) state;
+		BlockState nmsState = (BlockState) state;
 		Block block = nmsState.getBlock();
-
 		if (block == Blocks.PISTON || block == Blocks.STICKY_PISTON)
-			return nmsState.getValue(BlockPistonBase.EXTENDED) ? MovementReaction.BLOCK : MovementReaction.NORMAL;
+			return nmsState.getValue(PistonBaseBlock.EXTENDED) ? MovementReaction.BLOCK : MovementReaction.NORMAL;
 
-		if (block == Blocks.OBSIDIAN || nmsState.getBlockHardness(nmsWorld, blockPos) == -1.0f)
+		if (block == Blocks.OBSIDIAN || nmsState.getDestroySpeed(level, blockPos) == -1.0f)
 			return MovementReaction.BLOCK;
 
-		return fromNMS(nmsState.getPushReaction());
+		return fromNMS(nmsState.getPistonPushReaction());
 	}
 
-	public static MovementReaction fromNMS(EnumPushReaction reaction) {
+	public static MovementReaction fromNMS(PushReaction reaction) {
 		switch (reaction) {
 			case NORMAL:
 				return MovementReaction.NORMAL;

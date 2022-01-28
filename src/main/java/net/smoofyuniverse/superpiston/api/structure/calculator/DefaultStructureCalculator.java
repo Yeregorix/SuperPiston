@@ -22,15 +22,17 @@
 
 package net.smoofyuniverse.superpiston.api.structure.calculator;
 
-import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.ImmutableList;
 import net.smoofyuniverse.superpiston.api.structure.PistonStructure;
 import net.smoofyuniverse.superpiston.impl.BlockUtil;
 import net.smoofyuniverse.superpiston.impl.ReactionUtil;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.math.vector.Vector3i;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,8 +44,9 @@ import java.util.Set;
  */
 public class DefaultStructureCalculator implements PistonStructureCalculator {
 	private static final Direction[] CARDINALS = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
+	private static final List<BlockType> STICKY_BLOCKS = ImmutableList.of(BlockTypes.SLIME_BLOCK.get(), BlockTypes.HONEY_BLOCK.get());
 
-	protected final World world;
+	protected final ServerWorld world;
 	protected final BlockSnapshot piston;
 	protected final Direction direction, movement;
 
@@ -54,8 +57,8 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 	protected Set<Vector3i> toMoveSet;
 	protected int maxBlocks = 12;
 
-	public DefaultStructureCalculator(World world, BlockSnapshot piston, Direction direction, Direction movement) {
-		if (direction != movement && direction != movement.getOpposite())
+	public DefaultStructureCalculator(ServerWorld world, BlockSnapshot piston, Direction direction, Direction movement) {
+		if (direction != movement && direction != movement.opposite())
 			throw new IllegalArgumentException("movement");
 
 		this.world = world;
@@ -68,7 +71,7 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 		for (Direction dir : CARDINALS) {
 			if (dir == movement)
 				continue;
-			if (dir == movement.getOpposite())
+			if (dir == movement.opposite())
 				continue;
 			this.sides[i] = dir;
 			i++;
@@ -84,7 +87,7 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 		this.toMoveSet = new HashSet<>();
 
 		Vector3i offset = this.direction.asBlockOffset();
-		boolean moveable = calculate(this.piston.getPosition().add(this.extending ? offset : offset.mul(2)));
+		boolean moveable = calculate(this.piston.position().add(this.extending ? offset : offset.mul(2)));
 
 		PistonStructure structure = moveable ? new PistonStructure(this.toMove, this.toDestroy) : new PistonStructure(false);
 		this.toMove = null;
@@ -95,7 +98,7 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	protected boolean calculate(Vector3i origin) {
-		BlockState state = this.world.getBlock(origin);
+		BlockState state = this.world.block(origin);
 
 		MovementReaction reaction = getReaction(state, origin);
 		if (reaction == MovementReaction.DESTROY) {
@@ -110,7 +113,7 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 
 		for (int i = 0; i < this.toMove.size(); ++i) {
 			Vector3i pos = this.toMove.get(i);
-			if (isSticky(this.world.getBlock(pos), pos) && !addBranchingBlocks(pos))
+			if (isSticky(this.world.block(pos), pos) && !addBranchingBlocks(pos))
 				return false;
 		}
 
@@ -118,15 +121,15 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 	}
 
 	protected boolean addBlockLine(Vector3i origin, Direction dir) {
-		BlockState state = this.world.getBlock(origin);
+		BlockState state = this.world.block(origin);
 
-		if (BlockUtil.isAir(this.world, state, origin))
+		if (BlockUtil.isAir(state))
 			return true;
 
 		if (this.toMoveSet.contains(origin))
 			return true;
 
-		if (this.piston.getPosition().equals(origin))
+		if (this.piston.position().equals(origin))
 			return true;
 
 		MovementReaction reaction = getReaction(state, origin);
@@ -141,13 +144,19 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 
 		Vector3i pos = origin;
 		while (isSticky(state, pos)) {
-			pos = pos.sub(offset);
-			state = this.world.getBlock(pos);
+			BlockState prevState = state;
+			Vector3i prevPos = pos;
 
-			if (BlockUtil.isAir(this.world, state, pos))
+			pos = pos.sub(offset);
+			state = this.world.block(pos);
+
+			if (BlockUtil.isAir(state))
 				break;
 
-			if (this.piston.getPosition().equals(pos))
+			if (this.piston.position().equals(pos))
+				break;
+
+			if (!canStickToEachOther(prevState, prevPos, state, pos))
 				break;
 
 			if (getReaction(state, pos) != MovementReaction.NORMAL)
@@ -177,19 +186,19 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 
 				for (int l = 0; l <= k + m; ++l) {
 					Vector3i pos2 = this.toMove.get(l);
-					if (isSticky(this.world.getBlock(pos2), pos2) && !addBranchingBlocks(pos2))
+					if (isSticky(this.world.block(pos2), pos2) && !addBranchingBlocks(pos2))
 						return false;
 				}
 
 				return true;
 			}
 
-			state = this.world.getBlock(pos);
+			state = this.world.block(pos);
 
-			if (BlockUtil.isAir(this.world, state, pos))
+			if (BlockUtil.isAir(state))
 				return true;
 
-			if (this.piston.getPosition().equals(pos))
+			if (this.piston.position().equals(pos))
 				return false;
 
 			reaction = getReaction(state, pos);
@@ -212,27 +221,37 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 	}
 
 	protected boolean addBranchingBlocks(Vector3i origin) {
+		BlockState originState = this.world.block(origin);
 		for (Direction dir : this.sides) {
-			if (!addBlockLine(origin.add(dir.asBlockOffset()), dir))
+			Vector3i branch = origin.add(dir.asBlockOffset());
+			if (canStickToEachOther(originState, origin, this.world.block(branch), branch) && !addBlockLine(branch, dir))
 				return false;
 		}
 		return true;
 	}
 
-	protected void reorderListAtCollision(int a, int b) {
+	protected void reorderListAtCollision(int start, int pivot) {
 		int size = this.toMove.size();
 
 		List<Vector3i> list = new ArrayList<>(size);
-		list.addAll(this.toMove.subList(0, b));
-		list.addAll(this.toMove.subList(size - a, size));
-		list.addAll(this.toMove.subList(b, size - a));
+		list.addAll(this.toMove.subList(0, pivot));
+		list.addAll(this.toMove.subList(size - start, size));
+		list.addAll(this.toMove.subList(pivot, size - start));
 
 		this.toMove.clear();
 		this.toMove.addAll(list);
 	}
 
 	public boolean isSticky(BlockState state, Vector3i pos) {
-		return state.getType() == BlockTypes.SLIME;
+		return STICKY_BLOCKS.contains(state.type());
+	}
+
+	public boolean canStickToEachOther(BlockState state1, Vector3i pos1, BlockState state2, Vector3i pos2) {
+		boolean sticky1 = isSticky(state1, pos1);
+		boolean sticky2 = isSticky(state2, pos2);
+		if (sticky1 && sticky2)
+			return state1.type() == state2.type();
+		return sticky1 || sticky2;
 	}
 
 	public MovementReaction getReaction(BlockState state, Vector3i pos) {

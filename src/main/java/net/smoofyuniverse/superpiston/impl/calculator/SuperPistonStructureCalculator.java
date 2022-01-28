@@ -22,18 +22,18 @@
 
 package net.smoofyuniverse.superpiston.impl.calculator;
 
-import com.flowpowered.math.vector.Vector3i;
 import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureCalculator;
-import net.smoofyuniverse.superpiston.config.world.WorldConfig;
+import net.smoofyuniverse.superpiston.config.world.WorldConfig.Resolved;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.math.vector.Vector3i;
 
 public class SuperPistonStructureCalculator extends DefaultStructureCalculator {
-	public final WorldConfig.Immutable config;
+	public final Resolved config;
 
-	public SuperPistonStructureCalculator(World world, BlockSnapshot piston, Direction direction, Direction movement, WorldConfig.Immutable config) {
+	public SuperPistonStructureCalculator(ServerWorld world, BlockSnapshot piston, Direction direction, Direction movement, Resolved config) {
 		super(world, piston, direction, movement);
 		if (config == null)
 			throw new IllegalArgumentException("config");

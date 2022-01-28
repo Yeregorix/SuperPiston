@@ -26,38 +26,46 @@ import net.smoofyuniverse.superpiston.api.structure.PistonStructure;
 import net.smoofyuniverse.superpiston.api.structure.calculator.PistonStructureCalculator;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.event.Cancellable;
-import org.spongepowered.api.event.world.TargetWorldEvent;
+import org.spongepowered.api.event.Event;
 import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.server.ServerWorld;
 
 /**
  * Base event for when a piston determines a {@link PistonStructure}.
  */
-public interface PistonStructureCalculationEvent extends TargetWorldEvent, Cancellable {
+public interface PistonStructureCalculationEvent extends Event, Cancellable {
+
+	/**
+	 * Gets the world.
+	 *
+	 * @return The world.
+	 */
+	ServerWorld world();
 
 	/**
 	 * Gets the block representing the piston.
 	 * In a modded environment this block might not even be a real piston.
 	 * Do not use this block to determine the direction of the piston.
-	 * Use {@link PistonStructureCalculationEvent#getPistonDirection()} instead.
+	 * Use {@link PistonStructureCalculationEvent#pistonDirection()} instead.
 	 *
 	 * @return The block representing the piston.
 	 */
-	BlockSnapshot getPiston();
+	BlockSnapshot piston();
 
 	/**
 	 * @return The direction of the piston.
 	 */
-	Direction getPistonDirection();
+	Direction pistonDirection();
 
 	/**
 	 * Gets the direction of the movement.
-	 * If it matches {@link PistonStructureCalculationEvent#getPistonDirection()} then the piston is extending.
+	 * If it matches {@link PistonStructureCalculationEvent#pistonDirection()} then the piston is extending.
 	 * If it matches the opposite then the piston is retracting.
 	 * If it matches something else then a mod is doing weird stuff.
 	 *
 	 * @return The direction of the movement.
 	 */
-	Direction getPistonMovement();
+	Direction pistonMovement();
 
 	/**
 	 * Called before the {@link PistonStructure} is calculated.
@@ -68,12 +76,12 @@ public interface PistonStructureCalculationEvent extends TargetWorldEvent, Cance
 		/**
 		 * @return The original calculator.
 		 */
-		PistonStructureCalculator getOriginalCalculator();
+		PistonStructureCalculator originalCalculator();
 
 		/**
 		 * @return The calculator that will be used.
 		 */
-		PistonStructureCalculator getCalculator();
+		PistonStructureCalculator calculator();
 
 		/**
 		 * Sets the calculator the will be used.
@@ -91,11 +99,11 @@ public interface PistonStructureCalculationEvent extends TargetWorldEvent, Cance
 		/**
 		 * @return The calculator that has been used.
 		 */
-		PistonStructureCalculator getCalculator();
+		PistonStructureCalculator calculator();
 
 		/**
 		 * @return The calculated structure.
 		 */
-		PistonStructure getStructure();
+		PistonStructure structure();
 	}
 }
