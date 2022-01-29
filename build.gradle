@@ -59,7 +59,7 @@ dependencies {
     implementation 'net.smoofyuniverse:oreupdater:1.1.1'
     implementation 'net.smoofyuniverse:worldmap:1.1.0'
 
-    spongevanilla 'org.spongepowered:spongevanilla:1.16.5-8.0.0-RC1052:universal'
+    spongevanilla 'org.spongepowered:spongevanilla:1.16.5-8.0.0-RC1057:universal'
 }
 
 minecraft {
