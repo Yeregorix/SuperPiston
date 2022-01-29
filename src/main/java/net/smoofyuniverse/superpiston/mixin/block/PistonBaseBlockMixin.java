@@ -24,13 +24,20 @@ package net.smoofyuniverse.superpiston.mixin.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.PushReaction;
+import net.smoofyuniverse.superpiston.impl.internal.InternalStructureResolver;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(PistonBaseBlock.class)
 public abstract class PistonBaseBlockMixin {
@@ -43,5 +50,24 @@ public abstract class PistonBaseBlockMixin {
 	@Redirect(method = "triggerEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/piston/PistonBaseBlock;isPushable(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;ZLnet/minecraft/core/Direction;)Z"))
 	public boolean alwaysPushable(BlockState state, Level level, BlockPos pos, Direction facing, boolean destroy, Direction facing2) {
 		return true;
+	}
+
+	@Redirect(method = "moveBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/piston/PistonStructureResolver;resolve()Z"))
+	public boolean onMoveResolve(PistonStructureResolver resolver) {
+		if (resolver.resolve()) {
+			((InternalStructureResolver) resolver).resolveBlocksToRefresh();
+			return true;
+		}
+		return false;
+	}
+
+	@Inject(method = "moveBlocks", at = @At(value = "RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
+	public void onMoveEnd(Level level, BlockPos piston, Direction facing, boolean extending,
+						  CallbackInfoReturnable<Boolean> cir, BlockPos head, PistonStructureResolver resolver) {
+		if (level instanceof ServerLevel) {
+			ServerChunkCache cache = ((ServerLevel) level).getChunkSource();
+			for (BlockPos pos : ((InternalStructureResolver) resolver).getBlocksToRefresh())
+				cache.blockChanged(pos);
+		}
 	}
 }

@@ -32,6 +32,7 @@ import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureC
 import net.smoofyuniverse.superpiston.api.structure.calculator.PistonStructureCalculator;
 import net.smoofyuniverse.superpiston.impl.event.PostStructureCalculationEvent;
 import net.smoofyuniverse.superpiston.impl.event.PreStructureCalculationEvent;
+import net.smoofyuniverse.superpiston.impl.internal.InternalStructureResolver;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.event.Cause;
@@ -39,31 +40,51 @@ import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.util.Constants;
 import org.spongepowered.common.util.VecHelper;
 import org.spongepowered.math.vector.Vector3i;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Mixin(PistonStructureResolver.class)
-public class PistonStructureResolverMixin {
-	@Shadow
+public abstract class PistonStructureResolverMixin implements InternalStructureResolver {
+	private final Set<BlockPos> toRefresh = new HashSet<>();
 	@Final
+	@Shadow
 	private Level level;
-	@Shadow
+	@Mutable
 	@Final
+	@Shadow
 	private List<BlockPos> toPush;
-	@Shadow
+	@Mutable
 	@Final
+	@Shadow
 	private List<BlockPos> toDestroy;
+	@Final
+	@Shadow
+	private net.minecraft.core.Direction pushDirection;
 
 	private Direction direction, movement;
 	private BlockSnapshot piston;
+	private boolean resolveCustom = true;
+
+	@Inject(method = "resolve", at = @At("HEAD"), cancellable = true)
+	public void onResolve(CallbackInfoReturnable<Boolean> cir) {
+		if (this.resolveCustom) {
+			SuperPistonTimings.CALCULATION.startTiming();
+			cir.setReturnValue(resolveCustom());
+			SuperPistonTimings.CALCULATION.stopTiming();
+		}
+	}
 
 	@Inject(method = "<init>", at = @At("RETURN"))
 	public void onInit(Level level, BlockPos pos, net.minecraft.core.Direction pistonDirection, boolean extending, CallbackInfo ci) {
@@ -72,21 +93,10 @@ public class PistonStructureResolverMixin {
 		this.movement = extending ? this.direction : this.direction.opposite();
 	}
 
-	/**
-	 * @author Yeregorix
-	 */
-	@Overwrite
-	public boolean resolve() {
-		SuperPistonTimings.CALCULATION.startTiming();
-		boolean r = calculate();
-		SuperPistonTimings.CALCULATION.stopTiming();
-
-		return r;
-	}
-
-	public boolean calculate() {
+	private boolean resolveCustom() {
 		this.toPush.clear();
 		this.toDestroy.clear();
+		this.toRefresh.clear();
 
 		Cause cause = Sponge.server().causeStackManager().currentCause();
 
@@ -126,5 +136,53 @@ public class PistonStructureResolverMixin {
 			this.toDestroy.add(VecHelper.toBlockPos(pos));
 
 		return structure.isMoveable();
+	}
+
+	private void resolveVanilla() {
+		this.resolveCustom = false;
+		resolve();
+		this.resolveCustom = true;
+	}
+
+	@Shadow
+	public abstract boolean resolve();
+
+	@Override
+	public void resolveBlocksToRefresh() {
+		this.toRefresh.clear();
+
+		// Backup custom blocks
+		List<BlockPos> toPushCustom = this.toPush;
+		List<BlockPos> toDestroyCustom = this.toDestroy;
+		this.toPush = new ArrayList<>();
+		this.toDestroy = new ArrayList<>();
+
+		// Resolve vanilla blocks
+		this.resolveCustom = false;
+		resolve();
+		this.resolveCustom = true;
+
+		// Difference between blocks updated by the client and blocks updated by the server
+		for (BlockPos pos : this.toPush) {
+			this.toRefresh.add(pos);
+			this.toRefresh.add(pos.relative(this.pushDirection));
+		}
+		this.toRefresh.addAll(this.toDestroy);
+		for (BlockPos pos : toPushCustom) {
+			this.toRefresh.remove(pos);
+			this.toRefresh.remove(pos.relative(this.pushDirection));
+		}
+		for (BlockPos pos : toDestroyCustom) {
+			this.toRefresh.remove(pos);
+		}
+
+		// Restore custom blocks
+		this.toPush = toPushCustom;
+		this.toDestroy = toDestroyCustom;
+	}
+
+	@Override
+	public Set<BlockPos> getBlocksToRefresh() {
+		return this.toRefresh;
 	}
 }
