@@ -26,7 +26,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.smoofyuniverse.superpiston.SuperPiston;
-import net.smoofyuniverse.superpiston.SuperPistonTimings;
 import net.smoofyuniverse.superpiston.api.structure.PistonStructure;
 import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureCalculator;
 import net.smoofyuniverse.superpiston.api.structure.calculator.PistonStructureCalculator;
@@ -79,11 +78,8 @@ public abstract class PistonStructureResolverMixin implements InternalStructureR
 
 	@Inject(method = "resolve", at = @At("HEAD"), cancellable = true)
 	public void onResolve(CallbackInfoReturnable<Boolean> cir) {
-		if (this.resolveCustom) {
-			SuperPistonTimings.CALCULATION.startTiming();
+		if (this.resolveCustom)
 			cir.setReturnValue(resolveCustom());
-			SuperPistonTimings.CALCULATION.stopTiming();
-		}
 	}
 
 	@Inject(method = "<init>", at = @At("RETURN"))

@@ -52,7 +52,6 @@ configurations {
 
 dependencies {
     implementation 'org.spongepowered:sponge:1.16.5-8.0.0-SNAPSHOT:dev'
-    implementation 'org.spongepowered:timings:1.0-SNAPSHOT'
     implementation 'org.spongepowered:mixin:0.8.4'
     implementation 'org.ow2.asm:asm-util:9.2'
 
