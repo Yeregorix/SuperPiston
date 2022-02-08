@@ -38,8 +38,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.smoofyuniverse.superpiston.util.MathUtil.clamp;
 import static net.smoofyuniverse.superpiston.util.RegistryUtil.resolveBlockStates;
+import static org.spongepowered.math.GenericMath.clamp;
 
 @ConfigSerializable
 public class WorldConfig {
