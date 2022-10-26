@@ -14,5 +14,5 @@ SuperPiston requires Java 17 and Gradle 7 to build.
 
 Tasks:
 
-- `shadowJar` constructs a jar that includes all its dependencies.
-- `setupVanillaServer` setups a vanilla server in directory `run/vanilla`.
+- `build` constructs jars for SpongeVanilla and SpongeForge.
+- `setupServer` setups sponge servers in directories `vanilla/run` and `forge/run`.
