@@ -33,6 +33,7 @@ import net.smoofyuniverse.superpiston.impl.internal.InternalServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.Platform;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
@@ -105,8 +106,10 @@ public class SuperPiston {
 
 		this.game.eventManager().registerListeners(this.container, new PistonListener(this));
 
+		String platformId = this.game.platform().container(Platform.Component.IMPLEMENTATION).metadata().id();
+
 		this.game.eventManager().registerListeners(this.container, new UpdateChecker(LOGGER, this.container,
-				createConfigLoader(this.configDir.resolve("update.conf")), "Yeregorix", "SuperPiston"));
+				createConfigLoader(this.configDir.resolve("update.conf")), "Yeregorix", "SuperPiston", platformId));
 	}
 
 	private void loadConfigs() {
