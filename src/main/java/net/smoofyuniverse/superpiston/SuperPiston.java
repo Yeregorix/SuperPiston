@@ -124,7 +124,7 @@ public class SuperPiston {
 	@Listener
 	public void onServerStarted(StartedEngineEvent<Server> e) {
 		if (e.engine() instanceof InternalServer)
-			LOGGER.info("SuperPiston " + this.container.metadata().version() + " was loaded successfully.");
+			LOGGER.info("SuperPiston {} was loaded successfully.", this.container.metadata().version());
 		else
 			LOGGER.error("!!WARNING!! SuperPiston was not loaded correctly. Be sure that the jar file is at the root of your mods folder!");
 	}

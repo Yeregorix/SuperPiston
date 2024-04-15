@@ -45,7 +45,7 @@ public class IOUtil {
 		try {
 			Files.move(file, backup);
 		} catch (IOException e) {
-			SuperPiston.LOGGER.warn("Failed to backup: " + backup, e);
+			SuperPiston.LOGGER.warn("Failed to backup: {}", backup, e);
 			return Optional.empty();
 		}
 
