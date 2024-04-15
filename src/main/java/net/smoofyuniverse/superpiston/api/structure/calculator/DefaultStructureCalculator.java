@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022 Hugo Dupanloup (Yeregorix)
+ * Copyright (c) 2018-2024 Hugo Dupanloup (Yeregorix)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -98,13 +98,17 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	protected boolean calculate(Vector3i origin) {
-		BlockState state = this.world.block(origin);
+		if (isPositionBlocked(origin))
+			return false;
 
+		BlockState state = this.world.block(origin);
 		MovementReaction reaction = getReaction(state, origin);
+
 		if (reaction == MovementReaction.DESTROY) {
 			this.toDestroy.add(origin);
 			return true;
 		}
+
 		if (reaction == MovementReaction.BLOCK)
 			return false;
 
@@ -121,15 +125,15 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 	}
 
 	protected boolean addBlockLine(Vector3i origin, Direction dir) {
-		BlockState state = this.world.block(origin);
-
-		if (BlockUtil.isAir(state))
-			return true;
-
 		if (this.toMoveSet.contains(origin))
 			return true;
 
-		if (this.piston.position().equals(origin))
+		if (this.piston.position().equals(origin) || isPositionBlocked(origin))
+			return true;
+
+		BlockState state = this.world.block(origin);
+
+		if (BlockUtil.isAir(state))
 			return true;
 
 		MovementReaction reaction = getReaction(state, origin);
@@ -148,12 +152,13 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 			Vector3i prevPos = pos;
 
 			pos = pos.sub(offset);
+
+			if (this.piston.position().equals(pos) || isPositionBlocked(pos))
+				break;
+
 			state = this.world.block(pos);
 
 			if (BlockUtil.isAir(state))
-				break;
-
-			if (this.piston.position().equals(pos))
 				break;
 
 			if (!canStickToEachOther(prevState, prevPos, state, pos))
@@ -198,7 +203,7 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 			if (BlockUtil.isAir(state))
 				return true;
 
-			if (this.piston.position().equals(pos))
+			if (this.piston.position().equals(pos) || isPositionBlocked(pos))
 				return false;
 
 			reaction = getReaction(state, pos);
@@ -242,6 +247,10 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 		this.toMove.addAll(list);
 	}
 
+	protected boolean isPositionBlocked(Vector3i pos) {
+		return ReactionUtil.isPositionBlocked(this.world, pos, this.movement);
+	}
+
 	public boolean isSticky(BlockState state, Vector3i pos) {
 		return STICKY_BLOCKS.contains(state.type());
 	}
@@ -255,10 +264,10 @@ public class DefaultStructureCalculator implements PistonStructureCalculator {
 	}
 
 	public MovementReaction getReaction(BlockState state, Vector3i pos) {
-		return ReactionUtil.getDefaultReaction(this.world, state, pos, this.movement);
+		return ReactionUtil.getDefaultReaction(state);
 	}
 
-	public static enum MovementReaction {
+	public enum MovementReaction {
 		NORMAL, DESTROY, BLOCK, PUSH_ONLY
 	}
 }

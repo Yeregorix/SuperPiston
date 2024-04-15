@@ -28,7 +28,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.PushReaction;
 import net.smoofyuniverse.superpiston.api.structure.calculator.DefaultStructureCalculator.MovementReaction;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.server.ServerWorld;
@@ -37,20 +36,24 @@ import org.spongepowered.math.vector.Vector3i;
 
 public class ReactionUtil {
 
-	public static MovementReaction getDefaultReaction(ServerWorld world, org.spongepowered.api.block.BlockState state, Vector3i pos, Direction movement) {
+	public static boolean isPositionBlocked(ServerWorld world, Vector3i pos, Direction movement) {
 		BlockPos blockPos = VecHelper.toBlockPos(pos);
 		ServerLevel level = (ServerLevel) world;
 
 		if (!level.getWorldBorder().isWithinBounds(blockPos))
-			return MovementReaction.BLOCK;
+			return true;
 
 		if (pos.y() < 0 || (movement == Direction.DOWN && pos.y() == 0))
-			return MovementReaction.BLOCK;
+			return true;
 
 		int h = level.getMaxBuildHeight() - 1;
 		if (pos.y() > h || (movement == Direction.UP && pos.y() == h))
-			return MovementReaction.BLOCK;
+			return true;
 
+		return false;
+	}
+
+	public static MovementReaction getDefaultReaction(org.spongepowered.api.block.BlockState state) {
 		if (BlockUtil.hasBlockEntity(state))
 			return MovementReaction.BLOCK;
 
@@ -61,26 +64,15 @@ public class ReactionUtil {
 
 		if (block == Blocks.OBSIDIAN || block == Blocks.CRYING_OBSIDIAN
 				|| block == Blocks.RESPAWN_ANCHOR || block == Blocks.REINFORCED_DEEPSLATE
-				|| nmsState.getDestroySpeed(level, blockPos) == -1.0f)
+				|| block.defaultDestroyTime() == -1.0f)
 			return MovementReaction.BLOCK;
 
-		return fromNMS(nmsState.getPistonPushReaction());
-	}
-
-	public static MovementReaction fromNMS(PushReaction reaction) {
-		switch (reaction) {
-			case NORMAL:
-				return MovementReaction.NORMAL;
-			case DESTROY:
-				return MovementReaction.DESTROY;
-			case BLOCK:
-				return MovementReaction.BLOCK;
-			case PUSH_ONLY:
-				return MovementReaction.PUSH_ONLY;
-			case IGNORE:
-				throw new IllegalArgumentException("IGNORE");
-			default:
-				throw new IllegalArgumentException();
-		}
+		return switch (nmsState.getPistonPushReaction()) {
+			case NORMAL -> MovementReaction.NORMAL;
+			case DESTROY -> MovementReaction.DESTROY;
+			case BLOCK -> MovementReaction.BLOCK;
+			case PUSH_ONLY -> MovementReaction.PUSH_ONLY;
+			case IGNORE -> throw new IllegalArgumentException("IGNORE");
+		};
 	}
 }

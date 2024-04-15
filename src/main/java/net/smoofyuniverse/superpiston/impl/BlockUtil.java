@@ -23,7 +23,6 @@
 package net.smoofyuniverse.superpiston.impl;
 
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
 
 public class BlockUtil {
 
@@ -32,6 +31,6 @@ public class BlockUtil {
 	}
 
 	public static boolean isAir(org.spongepowered.api.block.BlockState state) {
-		return ((BlockState) state).getMaterial() == Material.AIR;
+		return ((BlockState) state).isAir();
 	}
 }
