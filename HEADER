@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 Hugo Dupanloup (Yeregorix)
+ * Copyright (c) $YEAR Hugo Dupanloup (Yeregorix)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,18 +20,3 @@
  * SOFTWARE.
  */
 
-package net.smoofyuniverse.superpiston.impl;
-
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
-
-public class BlockUtil {
-
-	public static boolean hasBlockEntity(org.spongepowered.api.block.BlockState state) {
-		return ((BlockState) state).hasBlockEntity();
-	}
-
-	public static boolean isAir(org.spongepowered.api.block.BlockState state) {
-		return ((BlockState) state).getMaterial() == Material.AIR;
-	}
-}
