@@ -27,8 +27,8 @@ import net.minecraft.world.level.material.Material;
 
 public class BlockUtil {
 
-	public static boolean isEntityBlock(org.spongepowered.api.block.BlockState state) {
-		return ((BlockState) state).getBlock().isEntityBlock();
+	public static boolean hasBlockEntity(org.spongepowered.api.block.BlockState state) {
+		return ((BlockState) state).hasBlockEntity();
 	}
 
 	public static boolean isAir(org.spongepowered.api.block.BlockState state) {

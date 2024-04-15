@@ -51,7 +51,7 @@ public class ReactionUtil {
 		if (pos.y() > h || (movement == Direction.UP && pos.y() == h))
 			return MovementReaction.BLOCK;
 
-		if (BlockUtil.isEntityBlock(state))
+		if (BlockUtil.hasBlockEntity(state))
 			return MovementReaction.BLOCK;
 
 		BlockState nmsState = (BlockState) state;
@@ -59,7 +59,9 @@ public class ReactionUtil {
 		if (block == Blocks.PISTON || block == Blocks.STICKY_PISTON)
 			return nmsState.getValue(PistonBaseBlock.EXTENDED) ? MovementReaction.BLOCK : MovementReaction.NORMAL;
 
-		if (block == Blocks.OBSIDIAN || nmsState.getDestroySpeed(level, blockPos) == -1.0f)
+		if (block == Blocks.OBSIDIAN || block == Blocks.CRYING_OBSIDIAN
+				|| block == Blocks.RESPAWN_ANCHOR || block == Blocks.REINFORCED_DEEPSLATE
+				|| nmsState.getDestroySpeed(level, blockPos) == -1.0f)
 			return MovementReaction.BLOCK;
 
 		return fromNMS(nmsState.getPistonPushReaction());
