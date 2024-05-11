@@ -6,8 +6,7 @@
   "compatibilityLevel": "JAVA_8",
   "server": [
     "block.PistonBaseBlockMixin",
-    "block.PistonStructureResolverMixin",
-    "server.MinecraftServerMixin"
+    "block.PistonStructureResolverMixin"
   ],
   "injectors": {
     "defaultRequire": 1

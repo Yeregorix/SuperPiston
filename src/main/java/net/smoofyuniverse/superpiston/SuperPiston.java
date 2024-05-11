@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022 Hugo Dupanloup (Yeregorix)
+ * Copyright (c) 2018-2024 Hugo Dupanloup (Yeregorix)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@ import net.smoofyuniverse.ore.update.UpdateChecker;
 import net.smoofyuniverse.superpiston.config.world.WorldConfig;
 import net.smoofyuniverse.superpiston.config.world.WorldConfig.Resolved;
 import net.smoofyuniverse.superpiston.event.PistonListener;
-import net.smoofyuniverse.superpiston.impl.internal.InternalServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.api.Game;
@@ -123,10 +122,7 @@ public class SuperPiston {
 
 	@Listener
 	public void onServerStarted(StartedEngineEvent<Server> e) {
-		if (e.engine() instanceof InternalServer)
-			LOGGER.info("SuperPiston {} was loaded successfully.", this.container.metadata().version());
-		else
-			LOGGER.error("!!WARNING!! SuperPiston was not loaded correctly. Be sure that the jar file is at the root of your mods folder!");
+		LOGGER.info("SuperPiston {} was loaded successfully.", this.container.metadata().version());
 	}
 
 	public Resolved getConfig(ServerWorld world) {
