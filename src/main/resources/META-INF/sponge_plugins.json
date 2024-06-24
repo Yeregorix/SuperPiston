@@ -8,7 +8,7 @@
     {
       "id": "superpiston",
       "name": "SuperPiston",
-      "version": "1.2.0-forge",
+      "version": "1.2.0",
       "entrypoint": "net.smoofyuniverse.superpiston.SuperPiston",
       "description": "Configurable piston behavior",
       "links": {
@@ -25,13 +25,7 @@
       "dependencies": [
         {
           "id": "spongeapi",
-          "version": "10.0.0",
-          "load-order": "AFTER",
-          "optional": false
-        },
-        {
-          "id": "spongeforge",
-          "version": "10.0.0",
+          "version": "11.0.0",
           "load-order": "AFTER",
           "optional": false
         }
