@@ -10,9 +10,10 @@ Compiled artifacts and additional information can be found on Ore: https://ore.s
 
 ## Developers
 
-SuperPiston requires Java 17 to build.
+SuperPiston requires Java 21 to build.
 
-Tasks:
+Commands:
 
-- `build` constructs jars for SpongeVanilla and SpongeForge.
-- `setupServer` setups sponge servers in directories `vanilla/run` and `forge/run`.
+- `./gradlew shadowJar` constructs a jar that includes all its dependencies.
+- `./gradlew setupVanillaServer` setups a vanilla server in directory `run/vanilla`.
+- `./gradlew setupForgeServer` setups a Forge server in directory `run/forge`.
