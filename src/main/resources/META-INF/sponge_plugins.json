@@ -8,7 +8,7 @@
     {
       "id": "superpiston",
       "name": "SuperPiston",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "entrypoint": "net.smoofyuniverse.superpiston.SuperPiston",
       "description": "Configurable piston behavior",
       "links": {
