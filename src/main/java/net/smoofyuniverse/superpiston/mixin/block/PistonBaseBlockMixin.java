@@ -37,10 +37,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.util.Set;
 
 @Mixin(PistonBaseBlock.class)
 public abstract class PistonBaseBlockMixin {
+	private Set<BlockPos> blocksToRefresh;
 
 	@Redirect(method = "triggerEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getPistonPushReaction()Lnet/minecraft/world/level/material/PushReaction;"))
 	public PushReaction alwaysPushNormal(BlockState stateIn, BlockState state, Level level, BlockPos pos, int id, int param) {
@@ -55,19 +57,22 @@ public abstract class PistonBaseBlockMixin {
 	@Redirect(method = "moveBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/piston/PistonStructureResolver;resolve()Z"))
 	public boolean onMoveResolve(PistonStructureResolver resolver) {
 		if (resolver.resolve()) {
-			((InternalStructureResolver) resolver).resolveBlocksToRefresh();
+			this.blocksToRefresh = ((InternalStructureResolver) resolver).resolveBlocksToRefresh();
 			return true;
 		}
 		return false;
 	}
 
-	@Inject(method = "moveBlocks", at = @At(value = "RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
-	public void onMoveEnd(Level level, BlockPos piston, Direction facing, boolean extending,
-						  CallbackInfoReturnable<Boolean> cir, BlockPos head, PistonStructureResolver resolver) {
-		if (level instanceof ServerLevel) {
-			ServerChunkCache cache = ((ServerLevel) level).getChunkSource();
-			for (BlockPos pos : ((InternalStructureResolver) resolver).getBlocksToRefresh())
-				cache.blockChanged(pos);
+	@Inject(method = "moveBlocks", at = @At("RETURN"))
+	public void onMoveEnd(Level level, BlockPos piston, Direction facing, boolean extending, CallbackInfoReturnable<Boolean> cir) {
+		if (this.blocksToRefresh != null) {
+			if (level instanceof ServerLevel) {
+				ServerChunkCache cache = ((ServerLevel) level).getChunkSource();
+				for (BlockPos pos : this.blocksToRefresh) {
+					cache.blockChanged(pos);
+				}
+			}
+			this.blocksToRefresh = null;
 		}
 	}
 }

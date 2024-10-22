@@ -56,7 +56,6 @@ import java.util.Set;
 
 @Mixin(PistonStructureResolver.class)
 public abstract class PistonStructureResolverMixin implements InternalStructureResolver {
-	private final Set<BlockPos> toRefresh = new HashSet<>();
 	@Final
 	@Shadow
 	private Level level;
@@ -92,7 +91,6 @@ public abstract class PistonStructureResolverMixin implements InternalStructureR
 	private boolean resolveCustom() {
 		this.toPush.clear();
 		this.toDestroy.clear();
-		this.toRefresh.clear();
 
 		Cause cause = Sponge.server().causeStackManager().currentCause();
 
@@ -144,8 +142,8 @@ public abstract class PistonStructureResolverMixin implements InternalStructureR
 	public abstract boolean resolve();
 
 	@Override
-	public void resolveBlocksToRefresh() {
-		this.toRefresh.clear();
+	public Set<BlockPos> resolveBlocksToRefresh() {
+		Set<BlockPos> toRefresh = new HashSet<>();
 
 		// Backup custom blocks
 		List<BlockPos> toPushCustom = this.toPush;
@@ -154,31 +152,26 @@ public abstract class PistonStructureResolverMixin implements InternalStructureR
 		this.toDestroy = new ArrayList<>();
 
 		// Resolve vanilla blocks
-		this.resolveCustom = false;
-		resolve();
-		this.resolveCustom = true;
+		resolveVanilla();
 
 		// Difference between blocks updated by the client and blocks updated by the server
 		for (BlockPos pos : this.toPush) {
-			this.toRefresh.add(pos);
-			this.toRefresh.add(pos.relative(this.pushDirection));
+			toRefresh.add(pos);
+			toRefresh.add(pos.relative(this.pushDirection));
 		}
-		this.toRefresh.addAll(this.toDestroy);
+		toRefresh.addAll(this.toDestroy);
 		for (BlockPos pos : toPushCustom) {
-			this.toRefresh.remove(pos);
-			this.toRefresh.remove(pos.relative(this.pushDirection));
+			toRefresh.remove(pos);
+			toRefresh.remove(pos.relative(this.pushDirection));
 		}
 		for (BlockPos pos : toDestroyCustom) {
-			this.toRefresh.remove(pos);
+			toRefresh.remove(pos);
 		}
 
 		// Restore custom blocks
 		this.toPush = toPushCustom;
 		this.toDestroy = toDestroyCustom;
-	}
 
-	@Override
-	public Set<BlockPos> getBlocksToRefresh() {
-		return this.toRefresh;
+		return toRefresh;
 	}
 }

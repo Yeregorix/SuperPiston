@@ -28,7 +28,5 @@ import java.util.Set;
 
 public interface InternalStructureResolver {
 
-	void resolveBlocksToRefresh();
-
-	Set<BlockPos> getBlocksToRefresh();
+	Set<BlockPos> resolveBlocksToRefresh();
 }
