@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 Hugo Dupanloup (Yeregorix)
+ * Copyright (c) 2018-2025 Hugo Dupanloup (Yeregorix)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,11 +43,12 @@ public class ReactionUtil {
 		if (!level.getWorldBorder().isWithinBounds(blockPos))
 			return true;
 
-		if (pos.y() < 0 || (movement == Direction.DOWN && pos.y() == 0))
+		int minY = level.getMinY();
+		if (pos.y() < minY || (movement == Direction.DOWN && pos.y() == minY))
 			return true;
 
-		int h = level.getMaxBuildHeight() - 1;
-		if (pos.y() > h || (movement == Direction.UP && pos.y() == h))
+		int maxY = level.getMaxY();
+		if (pos.y() > maxY || (movement == Direction.UP && pos.y() == maxY))
 			return true;
 
 		return false;
